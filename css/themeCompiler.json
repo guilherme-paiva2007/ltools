@@ -1,0 +1,85 @@
+{
+    "themes": [
+        [
+            ["light", "#FFFFFF", "#C8C8C8"],
+            ["dark", "#000000", "#707070"]
+        ], [
+            ["beige", "#FFEFBE", "#DBDBD8"],
+            ["royal", "#00215F", "#495874"]
+        ]
+    ],
+    "colors": {
+        "pink": {
+            "light": "#F200DA",
+            "dark": "#D900C3",
+            "beige": "#F754D0",
+            "royal": "#8C0C9F"
+        },
+        "red": {
+            "light": "#F21000",
+            "dark": "#D90E00",
+            "beige": "#F75E43",
+            "royal": "#8C1521"
+        },
+        "orange": {
+            "light": "#F28500",
+            "dark": "#D97700",
+            "beige": "#F7AA43",
+            "royal": "#8C5921"
+        },
+        "yellow": {
+            "light": "#F2CA00",
+            "dark": "#DAB600",
+            "beige": "#F7D743",
+            "royal": "#8D8221"
+        },
+        "lime": {
+            "light": "#B7F500",
+            "dark": "#A3D900",
+            "beige": "#D0F343",
+            "royal": "#699821"
+        },
+        "green": {
+            "light": "#2AF500",
+            "dark": "#24D900",
+            "beige": "#75F343",
+            "royal": "#179821"
+        },
+        "spring": {
+            "light": "#00F478",
+            "dark": "#00D96C",
+            "beige": "#5AF291",
+            "royal": "#009867"
+        },
+        "cyan": {
+            "light": "#01F5EF",
+            "dark": "#00D9D5",
+            "beige": "#5BF3DE",
+            "royal": "#0098AB"
+        },
+        "blue": {
+            "light": "#0082F5",
+            "dark": "#0074D9",
+            "beige": "#5AA8E2",
+            "royal": "#0057AD"
+        },
+        "darkBlue": {
+            "light": "#002DF5",
+            "dark": "#0028D9",
+            "beige": "#5A71E2",
+            "royal": "#0026AD"
+        },
+        "purple": {
+            "light": "#8B00F5",
+            "dark": "#7B00D9",
+            "beige": "#B454E2",
+            "royal": "#500CAD"
+        },
+        "magenta": {
+            "light": "#ED00F5",
+            "dark": "#D200D9",
+            "beige": "#F354E2",
+            "royal": "#880CAD"
+        }
+    }
+}
