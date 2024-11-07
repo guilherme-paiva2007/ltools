@@ -5,7 +5,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Document</title>
-        <script src="./js/import.php"></script>
+        <?php include './html/head.php'; ?>
     </head>
     <body>
         <?php include './html/header.php' ?>

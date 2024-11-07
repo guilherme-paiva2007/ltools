@@ -1,3 +1,11 @@
 RewriteEngine On
 
-RewriteRule ^import.*$ /ltools/js/import.php
+RewriteRule ^server_jsimport.*$ ./js/_import.php [L]
+RewriteRule ^jsimport.*$ ./js/_import.js [L]
+
+RewriteRule ^cssimport.*$ ./css/style.css [L]
+RewriteRule ^themeimport.*$ ./css/themes.css [L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [L]
