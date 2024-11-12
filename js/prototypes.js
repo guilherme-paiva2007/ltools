@@ -17,14 +17,14 @@ class PrototypeManager {
     #set({name, configs}) {
         if (typeof name !== "string" && typeof name !== "symbol") throw new TypeError("PrototypeManager #set: name precisa ser do tipo string ou symbol.");
         if (typeof configs !== "object") throw new TypeError("PrototypeManager #set: config precisa ser um objeto.");
-        Object.defineProperties(this, {
+        Object.defineProperties(this.#target, {
             [name]: configs
         });
     }
 
     unset(name) {
         if (!Object.getOwnPropertyDescriptor(this, name).configurable) throw new Error(`PrototypeManager #unset: a propriedade ${name} não é configurável.`);
-        delete this[name];
+        delete this.#target[name];
     }
 
     setMethod(name, { value = function() {}, enumerable = false, configurable = false, writable = false }) {
@@ -42,7 +42,7 @@ class PrototypeManager {
         // configurable, enumerable, writable, value
     }
 
-    setProperty(name, { value, enumerable = true, configurable = true, writable = true }) {
+    setProperty(name, { value, enumerable = false, configurable = true, writable = true }) {
         if (typeof enumerable !== "boolean") throw new TypeError("PrototypeManager setProperty: enumerable precisa ser do tipo boolean.");
         if (typeof configurable !== "boolean") throw new TypeError("PrototypeManager setProperty: configurable precisa ser do tipo boolean.");
         if (typeof writable !== "boolean") throw new TypeError("PrototypeManager setProperty: writable precisa ser do tipo boolean.");
@@ -55,7 +55,7 @@ class PrototypeManager {
         this.#set({ name, configs });
     }
 
-    setGetterSetter(name, { get = function() {}, set = function(value) {}, enumerable = true, configurable = false }) {
+    setGetterSetter(name, { get = function() {}, set = function(value) {}, enumerable = false, configurable = false }) {
         if (typeof get !== "function") throw new TypeError("PrototypeManager setGetterSetter: get precisa ser uma função");
         if (typeof set !== "function") throw new TypeError("PrototypeManager setGetterSetter: set precisa ser uma função");
         if (set.length == 0) throw new SyntaxError("PrototypeManager setGetterSetter: set precisa ter um argumento.");
@@ -69,50 +69,54 @@ class PrototypeManager {
         };
         this.#set({ name, configs });
     }
+}
 
-    static Collection = class Collection {
+function setPrototypes() {    
+    const StringManipulator = new PrototypeManager(String);
+    const NumberManipulator = new PrototypeManager(Number);
+    const ArrayManipulator = new PrototypeManager(Array);
+
+    NumberManipulator.setGetterSetter('hex', {
         /**
-         * @param  {...PrototypeManager} managers 
+         * Retorna o valor hexadecimal do número.
+         * @returns {string}
          */
-        constructor(...managers) {
-            this.add(...managers);
+        get: function hex() {
+            return this.toString(16);
         }
+    });
 
-        #collection = new Set();
-
+    NumberManipulator.setMethod('isBetween', {
         /**
-         * @param  {...PrototypeManager} managers 
+         * Verifica se o número está dentro de um intervalo.
+         * @param {number} min Valor mínimo a ser verificado.
+         * @param {number} max Valor máximo a ser verificado.
+         * @param {boolean} includeEquals Inclue valores iguais aos mínimos e máximos.
+         * @returns {boolean}
          */
-        add(...managers) {
-            managers.forEach(manager => {
-                if (!(manager instanceof PrototypeManager)) throw new TypeError("PrototypeManager.Collection add: manager precisa ser uma instância de PrototypeManager.");
-                this.#collection.add(manager);
-            });
-        }
+        value: function isBetween(min, max = Infinity, includeEquals = false) {
+            if (typeof min !== "number" && !(min instanceof Number)) throw new TypeError(`parâmetro min precisa ser do tipo number`);
+            if (typeof max !== "number" && !(max instanceof Number)) throw new TypeError(`parâmetro max precisa ser do tipo number`);
+            if (typeof includeEquals !== "boolean" && !(includeEquals instanceof Boolean)) throw new TypeError(`parâmetro includeEquals precisa ser do tipo boolean`);
 
-        /**
-         * @param  {...PrototypeManager} managers 
-         */
-        remove(...managers) {
-            managers.forEach(manager => {
-                if (!(manager instanceof PrototypeManager)) throw new TypeError("PrototypeManager.Collection remove: manager precisa ser uma instância de PrototypeManager.");
-                if (this.#collection.has(manager)) this.#collection.delete(manager);
-            });
+            if (
+                (this > min || (includeEquals && this == min)) &&
+                (this < max || (includeEquals && this == max))
+            ) return true;
+
+            return false
         }
+    });
+    
+    if (typeof window !== "undefined") {
+        const HTMLElementManipulator = new PrototypeManager(HTMLElement);
+        const HTMLCollectionManipulator = new PrototypeManager(HTMLCollection);
     }
 }
 
-const basicPrototypes = new PrototypeManager.Collection();
-const webPrototypes = new PrototypeManager.Collection();
+setPrototypes()
 
-const StringManipulator = new PrototypeManager(String);
-const NumberManipulator = new PrototypeManager(Number);
-const ArrayManipulator = new PrototypeManager(Array);
-if (typeof window !== "undefined") {
-    const HTMLElementManipulator = new PrototypeManager(HTMLElement);
-    const HTMLCollectionManipulator = new PrototypeManager(HTMLCollection);
-
-    webPrototypes.add(HTMLElementManipulator, HTMLCollectionManipulator);
+if (typeof module !== "undefined") {
+    module.exports.PrototypeManager = PrototypeManager;
+    module.exports.setPrototypes = setPrototypes;
 }
-
-basicPrototypes.add(StringManipulator, NumberManipulator, ArrayManipulator);

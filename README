@@ -1,0 +1,15 @@
+Ferramentas para reuso
+
+---- Utilização ----
+
+
+
+---- Manipulação dos arquivos ----
+Documentos de páginas precisam incluir <?php include './php/page_config.php' ?>, sendo utilizável SOMENTE NO DIRETÓRIO BASE.
+Se necessário <?php include './php/connection.php' ?>
+Informações reutilizáveis do cabeçalho em <?php include './html/head.php' ?>
+
+Pode ser utilizado configurações em "localconfig.json", no diretório local.
+Suas propriedades são:
+    host: string
+    base_dir: string

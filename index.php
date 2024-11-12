@@ -9,7 +9,16 @@
     </head>
     <body>
         <?php include './html/header.php' ?>
-        <main></main>
+        <main>
+            <h1>Index</h1>
+            <?php
+            foreach (scandir("./") as $dir) {
+                if (str_ends_with($dir, ".php")) {
+                    echo "<a href=\"{$dir}\">{$dir}</a><br>";
+                }
+            }
+            ?>
+        </main>
         <?php include './html/footer.php' ?>
     </body>
 </html>

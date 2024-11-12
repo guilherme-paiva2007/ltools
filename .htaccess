@@ -1,11 +1,16 @@
 RewriteEngine On
 
-RewriteRule ^server_jsimport.*$ ./js/_import.php [L]
-RewriteRule ^jsimport.*$ ./js/_import.js [L]
+# Imports
+RewriteRule ^jsimport/auto$ ./js/_import.php [L]
+RewriteRule ^jsimport$ ./js/_import.js [L]
+RewriteRule ^cssimport$ ./css/style.css [L]
+RewriteRule ^themeimport$ ./css/themes.css [L]
 
-RewriteRule ^cssimport.*$ ./css/style.css [L]
-RewriteRule ^themeimport.*$ ./css/themes.css [L]
+# Rewrite .php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([^\.]+)$ $1.php [L]
 
+# Not found -> index
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [L]
