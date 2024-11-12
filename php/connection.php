@@ -6,6 +6,8 @@ $connection_config = [
     'database' => 'ltools_db'
 ];
 
+if (!isset($localconfigs)) $localconfigs = json_decode('../localconfig.json', true);
+
 if (isset($localconfigs['connection'])) {
     isset($localconfigs['connection']['hostname']) ? $connection_config['hostname'] = $localconfigs['connection']['hostname'] : null;
     isset($localconfigs['connection']['username']) ? $connection_config['username'] = $localconfigs['connection']['username'] : null;

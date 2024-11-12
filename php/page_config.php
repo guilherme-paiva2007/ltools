@@ -1,7 +1,7 @@
 <?php
 $page_configed = true;
 
-$localconfigs = json_decode(file_get_contents("localconfig.json"), true);
+if (!isset($localconfigs)) $localconfigs = json_decode('../localconfig.json', true);
 
 isset($localconfigs['host']) ? $host = $localconfigs['host'] : $host = $_SERVER['HTTP_HOST'];
 isset($localconfigs['base_dir']) ? $base_dir = $localconfigs['base_dir'] : $base_dir = "";
