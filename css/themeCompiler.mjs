@@ -46,8 +46,8 @@ class CSSSelector {
 class Theme {
     /**
      * @param {string} name 
-     * @param {string} base //VERIFICACAO DECOR + APLICACAO
-     * @param {string} grey // VERIFICACAO DE COR + APLICACAO
+     * @param {string} base
+     * @param {string} grey
      * @param {Theme} reverse
      */
     constructor(name, base, grey, reverse = undefined) {
@@ -321,75 +321,125 @@ class Color {
     Object.keys(Color.list).forEach(name => root_colors[name] = new CSSSelector(`:root.${name}Main, .${name}Main, .${name}Main *`));
     root_colors['base'] = new CSSSelector(':root.baseMain, .baseMain, .baseMain *');
 
-    Object.values(Color.list).forEach(color => {
-        const vars = color.vars;
-        const filters = color.filters;
-
-        Theme.list.forEach(theme => {
-            let var_theme_rules = [];
-            let filter_theme_rules = [];
-    
-            let var_rules = [];
-            let var_reverse_rules = [];
-            let base_var_rules = [];
-            let filter_reverse_rules = [];
-            let filter_rules = [];
-            let base_filter_rules = [];
-
-            let main_rules = [];
-            let main_reverse_rules = [];
-            let main_theme_rules = [];
-
-            Object.entries(vars[theme.name]).forEach(vardouble => {
-                const index = vardouble[0];
-                const code = vardouble[1];
-    
-                if (index == 0) {
-                    var_theme_rules.push(new CSSSelector.Rule(  `--${color.name}_${theme.name}`, code))                                         // --[color]_[theme]    -> ROOT
-                    var_rules.push(new CSSSelector.Rule(        `--${color.name}`,               `var(--${color.name}_${theme.name})`))         // --[color]            -> ROOT_THEME
-                    var_reverse_rules.push(new CSSSelector.Rule(`--${color.name}_reverse`,       `var(--${color.name}_${theme.reverse.name})`)) // --[color]_reverse    -> ROOT_THEME
-                } else {
-                    var_theme_rules.push(new CSSSelector.Rule(  `--${color.name}Var${index}_${theme.name}`, code))                                                    // --[color]Var[index]_[theme]  -> ROOT
-                    var_rules.push(new CSSSelector.Rule(        `--${color.name}Var${index}`,               `var(--${color.name}Var${index}_${theme.name})`))         // --[color]Var[index]          -> ROOT_THEME
-                    var_reverse_rules.push(new CSSSelector.Rule(`--${color.name}Var${index}_reverse`,       `var(--${color.name}Var${index}_${theme.reverse.name})`)) // --[color]Var[index]_reverse  -> ROOT_THEME
-                }
-            });
-
-            Object.entries(theme.vars).forEach(vardouble => {
+    Theme.list.forEach(theme => {
+        let THEME_color = [];
+        let THEME_color_reverse = [];
+        Object.values(Color.list).forEach(color => {
+            Object.entries(color.vars[theme.name]).forEach(vardouble => {
                 const index = vardouble[0];
                 const code = vardouble[1];
 
-                if (index == 0) {
-                    var_theme_rules.push(new CSSSelector.Rule(  `--${theme.name}`,  code))                              // --[base]   -> ROOT
-                    var_rules.push(new CSSSelector.Rule(        `--base`,           `var(--${theme.name})`))            // --base     -> ROOT_THEME
-                    var_reverse_rules.push(new CSSSelector.Rule(`--reverse`,        `var(--${theme.reverse.name})`))    // --reverse  -> ROOT_THEME
-                } else {
-                    var_theme_rules.push(new CSSSelector.Rule(  `--${theme.name}Var${index}`,  code))                              // --[base]Var[index]              -> ROOT
-                    var_rules.push(new CSSSelector.Rule(        `--baseVar${index}`,           `var(--${theme.name}Var${index})`))            // --baseVar[index]     -> ROOT_THEME
-                    var_reverse_rules.push(new CSSSelector.Rule(`--reverseVar${index}`,        `var(--${theme.reverse.name}Var${index})`))    // --reverseVar[index]  -> ROOT_THEME
-                }
+                let sufix = index == 0 ? "" : `Var${index}`;
+                root.addRules(new CSSSelector.Rule(`--${color.name}${sufix}_${theme.name}Theme`, code)) // --[color]<Var[index]>_[theme]: CODE -> ROOT
+                THEME_color.push(new CSSSelector.Rule(`--${color.name}${sufix}`, `var(--${color.name}${sufix}_${theme.name}Theme)`)) // --[color]<Var[index]>: VAR(CODE) -> THEME
+                THEME_color_reverse.push(new CSSSelector.Rule(`--${color.name}${sufix}_reverse`, `var(--${color.name}${sufix}_${theme.reverse.name}Theme)`)) // --[color]<Var[index]>_reverse: VAR(CODE) -> THEME
             });
 
-            Object.entries(filters[theme.name]).forEach(filterdouble => {
+            Object.entries(color.filters[theme.name]).forEach(filterdouble => {
                 const index = filterdouble[0];
                 const code = filterdouble[1];
 
-                filter_theme_rules.push(new CSSSelector.Rule(   `--${color.name}Filter${index}_${theme.name}`,  code))                                                       // --[color]Filter[index]_[theme]  -> ROOT
-                filter_rules.push(new CSSSelector.Rule(         `--${color.name}Filter${index}`,                `var(--${color.name}Filter${index}_${theme.name})`))         // --[color]Filter[index]          -> ROOT_THEME
-                filter_reverse_rules.push(new CSSSelector.Rule( `--${color.name}Filter${index}_reverse`,        `var(--${color.name}Filter${index}_${theme.reverse.name})`)) // --[color]Filter[index]_reverse  -> ROOT_THEME
+                let sufix = `Filter${index}`;
+                root.addRules(new CSSSelector.Rule(`--${color.name}${sufix}_${theme.name}Theme`, code)) // --[color]Filter[index]_[theme]: CODE -> ROOT
+                THEME_color.push(new CSSSelector.Rule(`--${color.name}${sufix}`, `var(--${color.name}${sufix}_${theme.name}Theme)`)) // --[color]Filter[index]: VAR(CODE) -> THEME
+                THEME_color_reverse.push(new CSSSelector.Rule(`--${color.name}${sufix}_reverse`, `var(--${color.name}${sufix}_${theme.reverse.name}Theme)`)) // --[color]Filter[index]_reverse: VAR(CODE) -> THEME
             });
-
-            Object.entries(theme.filters).forEach(filterdouble => {
-                const index = filterdouble[0];
-                const code = filterdouble[1];
-
-                filter_theme_rules.push(new CSSSelector.Rule(   `--${theme.name}Filter${index}_${theme.name}`,  code))                                                       // --[color]Filter[index]_[theme]  -> ROOT
-                filter_rules.push(new CSSSelector.Rule(         `--${color.name}Filter${index}`,                `var(--${color.name}Filter${index}_${theme.name})`))         // --[color]Filter[index]          -> ROOT_THEME
-                filter_reverse_rules.push(new CSSSelector.Rule( `--${color.name}Filter${index}_reverse`,        `var(--${color.name}Filter${index}_${theme.reverse.name})`)) // --[color]Filter[index]_reverse  -> ROOT_THEME
-            })
         });
 
+        Object.entries(theme.vars).forEach(vardouble => {
+            const index = vardouble[0];
+            const code = vardouble[1];
 
+            let sufix = index == 0 ? "" : `Var${index}`;
+            root.addRules(new CSSSelector.Rule(`--${theme.name}${sufix}`, code)) // --[theme]<Var[index]>: CODE -> ROOT
+            THEME_color.push(new CSSSelector.Rule(`--base${sufix}`, `var(--${theme.name}${sufix})`)) // --base<Var[index]>: VAR(CODE) -> THEME
+            THEME_color_reverse.push(new CSSSelector.Rule(`--reverse${sufix}`, `var(--${theme.reverse.name}${sufix})`)) // --reverse<Var[index]>: VAR(CODE) -> THEME
+        });
 
+        Object.entries(theme.filters).forEach(filterdouble => {
+            const index = filterdouble[0];
+            const code = filterdouble[1];
+            
+            let sufix = `Filter${index}`;
+            root.addRules(new CSSSelector.Rule(`--${theme.name}${sufix}`, code)) // --[theme]Filter[index]: CODE -> ROOT
+            THEME_color.push(new CSSSelector.Rule(`--base${sufix}`, `var(--${theme.name}${sufix})`)) // --baseFilter[index]: VAR(CODE) -> THEME 
+            THEME_color_reverse.push(new CSSSelector.Rule(`--reverse${sufix}`, `var(--${theme.reverse.name}${sufix})`)) // --reverseFilter[index]: VAR(CODE) -> THEME 
+        });
+
+        root_themes[theme.name].addRules(...THEME_color, ...THEME_color_reverse);
+    });
+
+    Object.values(Color.list).forEach(color => {
+        let COLOR_main = []
+        let COLOR_reverse = []
+        let COLOR_main_themes = {}
+        Object.entries(Color.getVars('#000000', '#000000')).forEach(vardouble => {
+            const index = vardouble[0];
+
+            let sufix = index == 0 ? "" : `Var${index}`;
+            COLOR_main.push(new CSSSelector.Rule(`--main${sufix}`, `var(--${color.name}${sufix})`)) // --main<Var[index]>: VAR(VAR(CODE)) -> COLOR
+            COLOR_reverse.push(new CSSSelector.Rule(`--main${sufix}_reverse`, `var(--${color.name}${sufix}_reverse)`)) // --main<Var[index]>_reverse: VAR(VAR(CODE) -> COLOR
+
+            Theme.list.forEach(theme => {
+                if (COLOR_main_themes[theme.name] == undefined) COLOR_main_themes[theme.name] = [];
+                COLOR_main_themes[theme.name].push(new CSSSelector.Rule(`--main${sufix}_${theme.name}Theme`, `var(--${color.name}${sufix}_${theme.name}Theme)`)) // --main<Var[index]>_[theme]: VAR(VAR(CODE)) -> COLOR
+            });
+        });
+
+        Object.entries(Color.getFilters('#000000')).forEach(filterdouble => {
+            const index = filterdouble[0];
+
+            let sufix = `Filter${index}`;
+            COLOR_main.push(new CSSSelector.Rule(`--main${sufix}`, `var(--${color.name}${sufix})`)) // --mainFilter[index]: VAR(VAR(CODE)) -> COLOR
+            COLOR_reverse.push(new CSSSelector.Rule(`--main${sufix}_reverse`, `var(--${color.name}${sufix}_reverse)`)) // --mainFilter[index]_reverse: VAR(VAR(CODE)) -> COLOR
+
+            Theme.list.forEach(theme => {
+                COLOR_main_themes[theme.name].push(new CSSSelector.Rule(`--main${sufix}_${theme.name}Theme`, `var(--${color.name}${sufix}_${theme.name}Theme)`)) // --mainFilter[index]_[theme]: VAR(VAR(CODE)) -> COLOR
+            });
+        });
+
+        root_colors[color.name].addRules(...COLOR_main, ...COLOR_reverse);
+        Object.values(COLOR_main_themes).forEach(rules => {
+            root_colors[color.name].addRules(...rules);
+        });
+    });
+
+    // baseMain
+    let COLOR_main_base = [];
+    let COLOR_reverse_base = [];
+    let COLOR_main_themes_base = {};
+    Object.entries(Color.getVars('#000000', '#000000')).forEach(vardouble => {
+        const index = vardouble[0];
+
+        let sufix = index == 0 ? "" : `Var${index}`;
+        COLOR_main_base.push(new CSSSelector.Rule(`--main${sufix}`, `var(--base${sufix})`)) // --main<Var[index]>: VAR(VAR(CODE)) -> COLOR
+        COLOR_reverse_base.push(new CSSSelector.Rule(`--main${sufix}_reverse`, `var(--reverse${sufix})`)) // --main<Var[index]>_reverse: VAR(VAR(CODE) -> COLOR
+
+        Theme.list.forEach(theme => {
+            if (COLOR_main_themes_base[theme.name] == undefined) COLOR_main_themes_base[theme.name] = [];
+            COLOR_main_themes_base[theme.name].push(new CSSSelector.Rule(`--main${sufix}_${theme.name}Theme`, `var(--${theme.name}${sufix})`)) // --main<Var[index]>_[theme]: VAR(VAR(CODE)) -> COLOR
+        });
+    });
+
+    Object.entries(Color.getFilters('#000000')).forEach(filterdouble => {
+        const index = filterdouble[0];
+
+        let sufix = `Filter${index}`;
+        COLOR_main_base.push(new CSSSelector.Rule(`--main${sufix}`, `var(--base${sufix})`)) // --mainFilter[index]: VAR(VAR(CODE)) -> COLOR
+        COLOR_reverse_base.push(new CSSSelector.Rule(`--main${sufix}_reverse`, `var(--reverse${sufix})`)) // --mainFilter[index]_reverse: VAR(VAR(CODE)) -> COLOR
+
+        Theme.list.forEach(theme => {
+            COLOR_main_themes_base[theme.name].push(new CSSSelector.Rule(`--main${sufix}_${theme.name}Theme`, `var(--${theme.name}${sufix})`)) // --mainFilter[index]_[theme]: VAR(VAR(CODE)) -> COLOR
+        });
+    });
+
+    root_colors['base'].addRules(...COLOR_main_base, ...COLOR_reverse_base);
+        Object.values(COLOR_main_themes_base).forEach(rules => {
+            root_colors['base'].addRules(...rules);
+        });
+
+    const writeCSS = new Promise(resolve => {
+        let data = `${root}${Object.values(root_themes).join('')}${Object.values(root_colors).join('')}`
+        fs.writeFile('./css/themes.css', data, 'utf-8', () => { resolve() });
     });
 })()
