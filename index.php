@@ -1,4 +1,4 @@
-<?php include './php/page_config.php'; ?>
+<?php include './php/setup.php'; ?>
 <!DOCTYPE html>
 <html lang="pt-br">
     <head>

@@ -1,5 +1,5 @@
 <?php
-include './php/page_config.php';
+include './php/setup.php';
 include './php/connection.php';
 ?>
 <!DOCTYPE html>

@@ -8,16 +8,18 @@ class PrototypeManager {
                 this.#target = target.prototype;
                 break;
             default:
-                throw new TypeError("PrototypeManager constructor: target precisa ser um objeto de protótipo ou uma função construtora/classe.");
+                throw new TypeError("target precisa ser um objeto de protótipo ou uma função construtora/classe.");
         }
     }
 
     #target
 
-    #set({name, configs}) {
-        if (typeof name !== "string" && typeof name !== "symbol") throw new TypeError("PrototypeManager #set: name precisa ser do tipo string ou symbol.");
-        if (typeof configs !== "object") throw new TypeError("PrototypeManager #set: config precisa ser um objeto.");
-        Object.defineProperties(this.#target, {
+    #set({name, configs}, setstatic = false) {
+        let target = this.#target;
+        if (setstatic) target = this.#target.constructor;
+        if (typeof name !== "string" && typeof name !== "symbol") throw new TypeError("name precisa ser do tipo string ou symbol.");
+        if (typeof configs !== "object") throw new TypeError("config precisa ser um objeto.");
+        Object.defineProperties(target, {
             [name]: configs
         });
     }
@@ -27,47 +29,47 @@ class PrototypeManager {
         delete this.#target[name];
     }
 
-    setMethod(name, { value = function() {}, enumerable = false, configurable = false, writable = false }) {
-        if (typeof value !== "function") throw new TypeError("PrototypeManager setMethod: value precisa ser uma função.");
-        if (typeof enumerable !== "boolean") throw new TypeError("PrototypeManager setMethod: enumerable precisa ser do tipo boolean.");
-        if (typeof configurable !== "boolean") throw new TypeError("PrototypeManager setMethod: configurable precisa ser do tipo boolean.");
-        if (typeof writable !== "boolean") throw new TypeError("PrototypeManager setMethod: writable precisa ser do tipo boolean.");
+    setMethod(name, { value = function() {}, enumerable = false, configurable = false, writable = false }, setstatic) {
+        if (typeof value !== "function") throw new TypeError("value precisa ser uma função.");
+        if (typeof enumerable !== "boolean") throw new TypeError("enumerable precisa ser do tipo boolean.");
+        if (typeof configurable !== "boolean") throw new TypeError("configurable precisa ser do tipo boolean.");
+        if (typeof writable !== "boolean") throw new TypeError("writable precisa ser do tipo boolean.");
         let configs = {
             value,
             enumerable,
             configurable,
             writable
         }
-        this.#set({ name, configs });
+        this.#set({ name, configs }, setstatic);
         // configurable, enumerable, writable, value
     }
 
-    setProperty(name, { value, enumerable = false, configurable = true, writable = true }) {
-        if (typeof enumerable !== "boolean") throw new TypeError("PrototypeManager setProperty: enumerable precisa ser do tipo boolean.");
-        if (typeof configurable !== "boolean") throw new TypeError("PrototypeManager setProperty: configurable precisa ser do tipo boolean.");
-        if (typeof writable !== "boolean") throw new TypeError("PrototypeManager setProperty: writable precisa ser do tipo boolean.");
+    setProperty(name, { value, enumerable = false, configurable = true, writable = true }, setstatic) {
+        if (typeof enumerable !== "boolean") throw new TypeError("enumerable precisa ser do tipo boolean.");
+        if (typeof configurable !== "boolean") throw new TypeError("configurable precisa ser do tipo boolean.");
+        if (typeof writable !== "boolean") throw new TypeError("writable precisa ser do tipo boolean.");
         let configs = {
             value,
             enumerable,
             configurable,
             writable
         };
-        this.#set({ name, configs });
+        this.#set({ name, configs }, setstatic);
     }
 
-    setGetterSetter(name, { get = function() {}, set = function(value) {}, enumerable = false, configurable = false }) {
-        if (typeof get !== "function") throw new TypeError("PrototypeManager setGetterSetter: get precisa ser uma função");
-        if (typeof set !== "function") throw new TypeError("PrototypeManager setGetterSetter: set precisa ser uma função");
-        if (set.length == 0) throw new SyntaxError("PrototypeManager setGetterSetter: set precisa ter um argumento.");
-        if (typeof enumerable !== "boolean") throw new TypeError("PrototypeManager setGetterSetter: enumerable precisa ser do tipo boolean.");
-        if (typeof configurable !== "boolean") throw new TypeError("PrototypeManager setGetterSetter: configurable precisa ser do tipo boolean.");
+    setGetterSetter(name, { get = function() {}, set = function(value) {}, enumerable = false, configurable = false }, setstatic) {
+        if (typeof get !== "function") throw new TypeError("get precisa ser uma função");
+        if (typeof set !== "function") throw new TypeError("set precisa ser uma função");
+        if (set.length == 0) throw new SyntaxError("set precisa ter um argumento.");
+        if (typeof enumerable !== "boolean") throw new TypeError("enumerable precisa ser do tipo boolean.");
+        if (typeof configurable !== "boolean") throw new TypeError("configurable precisa ser do tipo boolean.");
         let configs = {
             get,
             set,
             enumerable,
             configurable
         };
-        this.#set({ name, configs });
+        this.#set({ name, configs }, setstatic);
     }
 }
 
@@ -75,6 +77,12 @@ function setPrototypes() {
     const StringManipulator = new PrototypeManager(String);
     const NumberManipulator = new PrototypeManager(Number);
     const ArrayManipulator = new PrototypeManager(Array);
+
+    StringManipulator.setMethod('reverse', {
+        value: function reverse() {
+            return this.split('').reverse().join('');
+        }
+    })
 
     NumberManipulator.setGetterSetter('hex', {
         /**
@@ -85,6 +93,24 @@ function setPrototypes() {
             return this.toString(16);
         }
     });
+
+    NumberManipulator.setGetterSetter('br', {
+        get: function br() {
+            let numArray = this.toFixed(2).split('.');
+            let int = numArray[0].reverse();
+            let dec = numArray[1];
+
+            let newInt = "";
+            for (let i = 0; i < int.length; i++) {
+                let alg = int[i];
+                if (i !== 0 && i % 3 == 0) newInt += '.'
+                newInt += alg;
+            }
+            newInt = newInt.reverse();
+
+            return `R\$${newInt},${dec}`;
+        }
+    })
 
     NumberManipulator.setMethod('isBetween', {
         /**
@@ -107,6 +133,27 @@ function setPrototypes() {
             return false
         }
     });
+
+    NumberManipulator.setMethod('isValidHex', {
+        /**
+         * Verifica se uma string é um número hexadecimal.
+         * @param {string} num 
+         */
+        value: function isValidHex(num) {
+            if (typeof num !== "string") throw new TypeError(`parâmetro num precisa ser do tipo string`);
+            num = num.toLowerCase().trim();
+            let valid = true;
+
+            for (let char of num) {
+                if (!['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f'].includes(char)) {
+                    valid = false;
+                    break;
+                }
+            }
+
+            return valid;
+        }
+    }, true)
     
     if (typeof window !== "undefined") {
         const HTMLElementManipulator = new PrototypeManager(HTMLElement);
