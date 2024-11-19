@@ -16,7 +16,9 @@
         <option value="POST">POST</option>
     </select><br>
     <label for="">Inputs:</label>
-    <input type="number" value="1" id="customform-inputs">
+    <input type="number" value="1" id="customform-inputs"><br>
+    <label for="">Blank:</label>
+    <input type="checkbox" value="true" id="customform-blank"><br>
     <hr>
     <form id="customform">
         <table>
@@ -51,6 +53,7 @@
         const inputcount =document.getElementById('customform-inputs');
         const table=document.getElementById('customform-table');
         const buttonrow =document.getElementById('customform-buttonrow');
+        const blank =document.getElementById('customform-blank');
 
         inputcount.addEventListener('input', () => {
             let count =parseInt(inputcount.value);
@@ -95,7 +98,8 @@
         form.addEventListener('submit', () => {
             form.method = method.value;
             form.action =destination.value;
-        })
+            form.target = Boolean(blank.value) ? "_blank" : "";
+        });
     </script>
 </body>
 </html>

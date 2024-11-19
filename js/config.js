@@ -1,5 +1,5 @@
 if (typeof window == "undefined") {
-    const { searchElement } = require("./script");
+    if (typeof searchElement == "undefined") var { searchElement } = require("./script");
 }
 
 const HTML = searchElement('html', 'query')
