@@ -1,5 +1,4 @@
-if (typeof window == "undefined") {
-    if (typeof searchElement == "undefined") var { searchElement } = require("./script");
-}
+// WEB
 
-const HTML = searchElement('html', 'query')
+const HTML = searchElement('html', 'query');
+const project_dir = `${location.protocol}//${location.host}/ltools/`;

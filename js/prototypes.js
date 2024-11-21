@@ -82,7 +82,18 @@ function setPrototypes() {
         value: function reverse() {
             return this.split('').reverse().join('');
         }
-    })
+    });
+
+    StringManipulator.setMethod('testValidConversion', {
+        value: function testValidConversion(value) {
+            if (
+                value === undefined || value === null ||
+                (typeof value == "object" && /\[object (.+)\]/.test(value.toString())) ||
+                (typeof value == "function")
+            ) return false;
+            return true;
+        }
+    }, true);
 
     NumberManipulator.setGetterSetter('hex', {
         /**
