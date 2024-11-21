@@ -31,7 +31,76 @@ class LogicalError extends Error {
 
 // Value Types
 
+class ID {
+    /**
+     * Identificar único.
+     * @param {string} type 
+     * @param {{
+     *      description: string,
+     *      symbol: symbol
+     * }} configs 
+     */
+    constructor(type, configs = {}, ...params) {
+        if (!ID.#types.includes(type)) throw new OptionError("tipo de ID inexistente.");
+        if (configs !== undefined) {
+            if (typeof configs !== "object" || configs === null) throw new TypeError("configurações precisam estar em um objeto");
+            typeof configs.description == "string" ? this.#description = configs.description : this.#description = "";
+            typeof configs.symbol == "symbol" ? this.#symbol = configs.symbol : this.#symbol = Symbol();
+        } else {
+            this.#symbol = Symbol();
+            this.#description = "";
+        }
 
+        this.#id = ID[type](...params)
+    }
+
+    #id;
+    #symbol;
+    #description;
+
+    get id() {
+        return this.#id;
+    }
+
+    get symbol() {
+        return this.#symbol;
+    }
+
+    get description() {
+        return this.#description;
+    }
+
+    static #types = [
+        this.date.name
+    ];
+
+    /**
+     * @param {Date} date 
+     * @returns {string}
+     */
+    static date(date) {
+        if (!(date instanceof Date)) date = new Date(date);
+        if (isNaN(date.valueOf())) date = new Date();
+
+        let fillNLength = (value, length = 2, fill = '0') => {
+            return value.toString().padStart(length, fill).slice(0, length);
+        }
+
+        return [
+            [
+                fillNLength(date.getFullYear(), 4),
+                fillNLength(date.getMonth() + 1),
+                fillNLength(date.getDate())
+            ],
+            [
+                fillNLength(date.getHours()),
+                fillNLength(date.getMinutes()),
+                fillNLength(date.getSeconds()),
+                fillNLength(date.getMilliseconds(), 3)
+            ]
+        ].map(subarr => subarr.join('.')).join('-')
+    }
+}
 
 // Collections
 
@@ -157,13 +226,27 @@ function searchElement(target, method = 'id') {
     }
 }
 
+class CatchProperty {
+    static search(type, obj, property) {
+        if (!this.#searchTypes.includes(type)) throw new OptionError("tipo de pesquisa inválida");
+        if (typeof obj !== "object") throw new TypeError("impossível pesquisar fora de objeto");
+        if (typeof property !== "string" && typeof property !== "symbol") throw new TypeError("nome de propriedade inválida");
+
+        return Object.getOwnPropertyDescriptor(obj, property)[type];
+    }
+
+    static #searchTypes = [ "get", "set", "value", "writable", "enumerable", "configurable" ]
+}
+
 if (typeof module !== "undefined") {
     module.exports = {
         OptionError,
         ContextError,
         LogicalError,
+        ID,
         TypedMap,
         TypedSet,
-        searchElement
+        searchElement,
+        CatchProperty
     }
 }
