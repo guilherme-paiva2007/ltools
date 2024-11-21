@@ -1,6 +1,10 @@
 // Storage Management
 
+class StorageManager {}
 
+// Visual Control
+
+class PageTheme {}
 
 // Interactive Elements
 
