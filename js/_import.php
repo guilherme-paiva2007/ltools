@@ -10,8 +10,3 @@ include './web_script.js';
 echo "\n\n\n";
 echo "// config.js\n";
 include './config.js';
-echo "\n\n\n";
-echo "// load.js\n";
-echo "window.addEventListener('load', () => {";
-include './load.js';
-echo "});";

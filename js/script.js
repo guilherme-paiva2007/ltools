@@ -138,14 +138,14 @@ class TypedMap extends Map {
         switch (type) {
             case "value":
                 if (this.#includeAllInstances) {
-                    if (!(value instanceof this.#type)) return false;
+                    if (!(value instanceof this.#type) && value.constructor !== this.#type) return false;
                 } else {
                     if (value.constructor !== this.#type) return false;
                 }
                 break;
             case "key":
                 if (this.#includeAllInstances) {
-                    if (!(value instanceof this.#keytype)) return false;
+                    if (!(value instanceof this.#keytype) && value.constructor !== this.#keytype) return false;
                 } else {
                     if (value.constructor !== this.#keytype) return false;
                 }
