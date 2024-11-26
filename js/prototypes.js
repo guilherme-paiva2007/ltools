@@ -145,6 +145,13 @@ function setPrototypes() {
         }
     });
 
+    NumberManipulator.setProperty('validHexChars', {
+        value: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f'],
+        enumerable: false,
+        writable: false,
+        configurable: false
+    }, true);
+
     NumberManipulator.setMethod('isValidHex', {
         /**
          * Verifica se uma string é um número hexadecimal.
@@ -156,7 +163,7 @@ function setPrototypes() {
             let valid = true;
 
             for (let char of num) {
-                if (!['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f'].includes(char)) {
+                if (!Number.validHexChars.includes(char)) {
                     valid = false;
                     break;
                 }

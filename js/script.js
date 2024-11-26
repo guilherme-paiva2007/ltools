@@ -238,6 +238,18 @@ class CatchProperty {
     static #searchTypes = [ "get", "set", "value", "writable", "enumerable", "configurable" ]
 }
 
+// Checks
+
+function isValidHexColor(colorStr = "") {
+    if (!String.testValidConversion(colorStr)) return false;
+    colorStr = String(colorStr);
+    colorStr = colorStr.replace("#", "");
+    if (!Number.isValidHex(colorStr)) return false;
+    if (colorStr.length !== 6) return false;
+
+    return true;
+}
+
 if (typeof module !== "undefined") {
     module.exports = {
         OptionError,

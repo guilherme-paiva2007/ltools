@@ -249,7 +249,91 @@ class WebStorageManager {
 
 // Visual Control
 
-class PageTheme {}
+class ChromaticManager {
+    constructor() {
+        throw new TypeError("impossível utilizar este construtor");
+    }
+
+    static Theme = class ChromaticPackageTheme {
+        constructor(name, base, vars, filters, reverse) {
+            if (!String.testValidConversion(name)) throw new TypeError("nome inválido para conversão em string.");
+            if (!String.testValidConversion(base)) throw new TypeError("base inválida para conversão em string.");
+            if (!String.testValidConversion(reverse)) throw new TypeError("nome de tema inverso inválido para conversão em string.");
+
+            name = String(name);
+            reverse = String(reverse);
+            base = String(base);
+            if (!isValidHexColor(base)) throw new TypeError("cor base não é uma cor hexadecimal");
+
+            if (!(vars instanceof Array)) throw new TypeError("cores variantes precisam estar num array");
+            if (vars.length == 0) throw new RangeError("não existem cores variantes");
+            if (!(filters instanceof Array)) throw new TypeError("filtros precisam estar num array");
+            if (filters.length == 0) throw new RangeError("não existem filtros");
+
+            vars.forEach((varColor, index) => {
+                if (!isValidHexColor(varColor)) throw new TypeError(`cor variante [${index}] não é uma cor hexadecimal`);
+            });
+            filters.forEach((filter, index) => {
+                if (!isValidHexColor(filter)) throw new TypeError(`filtro [${index}] não é uma cor hexadecimal`);
+            });
+
+            this.#name = name;
+            this.#base = base;
+            this.#vars.push(...vars);
+            this.#filters.push(...filters);
+            this.#reverse = reverse;
+        }
+
+        #name = "";
+        #base = "";
+        #vars = [];
+        #filters = [];
+        #reverse = "";
+
+        get name() { return this.#name }
+        get base() { return this.#base }
+        get vars() { return [...this.#vars] }
+        get filters() { return [...this.#filters] }
+        get reverse() { return this.#reverse }
+    }
+
+    static Color = class ChromaticPackageColor {
+        constructor(name, color, vars, filters) {
+            if (!String.testValidConversion(name)) throw new TypeError("nome inválido para conversão em string.");
+            if (!String.testValidConversion(color)) throw new TypeError("cor inválida para conversão em string.");
+            
+            name = String(name);
+            color = String(color);
+
+            if (!isValidHexColor(color)) throw new TypeError("cor inserida não é uma cor hexadecimal");
+            
+            vars.forEach((varColor, index) => {
+                if (!isValidHexColor(varColor)) throw new TypeError(`cor variante [${index}] não é uma cor hexadecimal`);
+            });
+            filters.forEach((filter, index) => {
+                if (!isValidHexColor(filter)) throw new TypeError(`filtro [${index}] não é uma cor hexadecimal`);
+            });
+
+            this.#name = name;
+            this.#color = color;
+            this.#vars.push(...vars);
+            this.#filters.push(...filters);
+        }
+
+        #name;
+        #color;
+        #vars = [];
+        #filters = [];
+
+        get name() { return this.#name }
+        get color() { return this.#color }
+        get vars() { return [...this.#vars] }
+        get filters() { return [...this.#filters] }
+    }
+
+    #themeList = new TypedMap(ChromaticManager.Theme, String);
+    #colorList = new TypedMap(ChromaticManager.Color, String);
+}
 
 // Interactive Elements
 
