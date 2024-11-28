@@ -1,7 +1,7 @@
 // Storage Management
 
 if (typeof module !== "undefined") {
-    const { TypedMap, OptionError } = require( "./script" );
+    const { TypedMap, OptionError, searchElement } = require( "./script" );
 }
 
 class WebStorageManager {
@@ -282,6 +282,8 @@ class ChromaticManager {
             this.#vars.push(...vars);
             this.#filters.push(...filters);
             this.#reverse = reverse;
+
+            ChromaticManager.#themeList.set(name, this)
         }
 
         #name = "";
@@ -298,41 +300,159 @@ class ChromaticManager {
     }
 
     static Color = class ChromaticPackageColor {
-        constructor(name, color, vars, filters) {
+        constructor(name) {
             if (!String.testValidConversion(name)) throw new TypeError("nome inválido para conversão em string.");
-            if (!String.testValidConversion(color)) throw new TypeError("cor inválida para conversão em string.");
-            
             name = String(name);
-            color = String(color);
+            this.#name = name;
 
+            ChromaticManager.#colorList.set(name, this);
+        }
+
+        setThemeColor(theme, color, vars, filters) {
+            if (!String.testValidConversion(color)) throw new TypeError("cor inválida para conversão em string.");
+            if (!String.testValidConversion(theme)) throw new TypeError("tema inválido para conversão em string.");
+            color = String(color);
+            theme = String(theme);
             if (!isValidHexColor(color)) throw new TypeError("cor inserida não é uma cor hexadecimal");
-            
+            if (![...ChromaticManager.#themeList.keys()].includes(theme)) throw new ReferenceError("tema selecionado não foi encontrado na lista de temas");
+            if (!(vars instanceof Array)) throw new TypeError("cores variantes precisam estar num array");
+            if (!(filters instanceof Array)) throw new TypeError("filtros precisam estar num array");
+
             vars.forEach((varColor, index) => {
                 if (!isValidHexColor(varColor)) throw new TypeError(`cor variante [${index}] não é uma cor hexadecimal`);
             });
+
             filters.forEach((filter, index) => {
                 if (!isValidHexColor(filter)) throw new TypeError(`filtro [${index}] não é uma cor hexadecimal`);
             });
+            this.#colors.set(theme, new ChromaticManager.Color.#ThemeColor(theme, color, vars, filters));
 
-            this.#name = name;
-            this.#color = color;
-            this.#vars.push(...vars);
-            this.#filters.push(...filters);
+            return this;
         }
 
         #name;
-        #color;
-        #vars = [];
-        #filters = [];
+        #colors = new TypedMap(ChromaticManager.Color.#ThemeColor, String);
 
         get name() { return this.#name }
-        get color() { return this.#color }
-        get vars() { return [...this.#vars] }
-        get filters() { return [...this.#filters] }
+        get colors() {
+            let returnObj = {};
+            for (const [theme, color] of this.#colors.entries()) {
+                returnObj[theme] = color;
+            }
+            return returnObj;
+        }
+
+        static #ThemeColor = class ChromaticPackageColorThemeInstance {
+            constructor(theme, color, vars, filters) {
+                this.theme = theme;
+                this.color = color;
+                this.#vars.push(...vars);
+                this.#filters.push(...filters);
+            }
+
+            #vars = [];
+            #filters = [];
+
+            get vars() {
+                return [...this.#vars];
+            }
+
+            get filters() {
+                return [...this.#filters];
+            }
+        }
     }
 
-    #themeList = new TypedMap(ChromaticManager.Theme, String);
-    #colorList = new TypedMap(ChromaticManager.Color, String);
+    static #themeList = new TypedMap(ChromaticManager.Theme, String);
+    static #colorList = new TypedMap(ChromaticManager.Color, String);
+
+    static applyTheme(theme, target = searchElement('html', 'query')) {
+        if (!(target instanceof HTMLElement)) throw new TypeError("não é possível aplicar tema fora de um elemento");
+
+        if (theme instanceof ChromaticManager.Theme) {
+            theme = theme.name;
+        } else if (String.testValidConversion(theme)) {
+            theme = String(theme);
+        } else {
+            throw new TypeError("tema inválido para ser aplicado");
+        }
+
+        let themes = [...ChromaticManager.#themeList.keys()];
+
+        if (themes.includes(theme)) {
+            themes.forEach(checkTheme => {
+                if (checkTheme === theme) {
+                    target.classList.add(`${checkTheme}Theme`);
+                } else {
+                    target.classList.remove(`${checkTheme}Theme`);
+                }
+            });
+        } else {
+            throw new ReferenceError("tema não encontrado na lista de temas.");
+        }
+    }
+
+    static applyColor(color, target = searchElement('html', 'query')) {
+        if (!(target instanceof HTMLElement)) throw new TypeError("não é possível aplicar cor fora de um elemento");
+
+        if (color instanceof ChromaticManager.Color) {
+            color = color.name;
+        } else if (String.testValidConversion(color)) {
+            color = String(color);
+        } else {
+            throw new TypeError("cor inválida para ser aplicado");
+        }
+
+        let colors = [...ChromaticManager.#colorList.keys()];
+
+        if (colors.includes(color)) {
+            colors.forEach(checkColor => {
+                if (checkColor === color) {
+                    target.classList.add(`${checkColor}Main`);
+                } else {
+                    target.classList.remove(`${checkColor}Main`);
+                }
+            });
+        } else {
+            throw new ReferenceError("cor não encontrada na lista de cores.");
+        }
+    }
+
+    static apply(theme, color, target = searchElement('html', 'query')) {
+        this.applyTheme(theme, target);
+        this.applyColor(color, target);
+    }
+
+    static loadJSON = async function loadJSON(jsonlocation) {
+        const json = await fetch(jsonlocation).then(resp => resp.json())
+        
+        Object.values(json).forEach(theme => {
+            const name = theme.name;
+            const reverse = theme.reverse;
+            const base = theme.base;
+            const vars = Object.values(theme.vars);
+            const filters = Object.values(theme.filters);
+
+            new ChromaticManager.Theme(name, base, vars, filters, reverse);
+
+            Object.entries(theme.colors).forEach(colorDouble => {
+                const [ name, color ] = colorDouble;
+
+                const code = color.code;
+                const vars = Object.values(color.vars);
+                const filters = Object.values(color.filters);
+
+                if (this.#colorList.has(name)) {
+                    this.#colorList.get(name).setThemeColor(theme.name, code, vars, filters);
+                } else {
+                    new ChromaticManager.Color(name);
+                    this.#colorList.get(name).setThemeColor(theme.name, code, vars, filters);
+                }
+            });
+        });
+
+        return json;
+    }
 }
 
 // Interactive Elements
@@ -388,8 +508,4 @@ class DynamicSearch {
         callback(search);
         return search;
     }
-}
-
-if (typeof module !== "undefined") {
-    module.exports = {}
 }

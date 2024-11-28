@@ -245,7 +245,7 @@ function isValidHexColor(colorStr = "") {
     colorStr = String(colorStr);
     colorStr = colorStr.replace("#", "");
     if (!Number.isValidHex(colorStr)) return false;
-    if (colorStr.length !== 6) return false;
+    if (colorStr.length < 6 || colorStr.length > 8) return false;
 
     return true;
 }
@@ -259,6 +259,7 @@ if (typeof module !== "undefined") {
         TypedMap,
         TypedSet,
         searchElement,
-        CatchProperty
+        CatchProperty,
+        isValidHexColor
     }
 }
