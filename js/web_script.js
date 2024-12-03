@@ -509,3 +509,62 @@ class DynamicSearch {
         return search;
     }
 }
+
+class Popup {
+    constructor(link, { name, popupconfg }) {
+        if (!String.testValidConversion(link)) throw new TypeError("link inválido para conversão em string");
+        link = String(link);
+        this.#link = link;
+
+        String.testValidConversion(name) ? name = String(name) : name = ID.date();
+        String.testValidConversion(popupconfg) ? popupconfg = String(popupconfg) : popupconfg = popupConfig(800, 500);
+
+        this.#config = {
+            name,
+            popupconfg
+        };
+
+        Object.defineProperty(this, 'storage', { writable: false, configurable: false });
+        Object.preventExtensions(this);
+    }
+
+    #link;
+    #config = {
+        name: '',
+        popupconfg: ''
+    };
+
+    storage = {};
+    #window = null;
+
+    open() {
+        if (this.#window !== null) return;
+        this.#window = window.open(this.#link, "_blank", this.#config.popupconfg);
+        if (this.#window === null) return null;
+        this.#window.addEventListener('load', () => {
+            this.#window[Popup.IncomingStorageSymbol] = this.storage;
+        });
+        return this.#window;
+    }
+
+    close() {
+        if (this.#window === null) return;
+        this.#window.close();
+    }
+
+    static #IncomingStorage = Symbol('IncomingPopupStorage');
+
+    static {
+        Symbol.IncomingStorage = this.#IncomingStorage;
+    }
+
+    static get IncomingStorageSymbol() {
+        if (window.opener === null) return this.#IncomingStorage;
+        return window.opener.Symbol.IncomingStorage;
+    }
+
+    static get IncomingStorage() {
+        if (window.opener === null) return null;
+        return window[this.IncomingStorageSymbol];
+    }
+}
