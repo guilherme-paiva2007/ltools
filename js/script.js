@@ -1,16 +1,126 @@
+// Control
+
+class Property {
+    constructor(object, property, ...manipulators) {
+        if (typeof property !== "string" && typeof property !== "symbol") throw new TypeError("nome de propriedade inválida");
+        if (typeof object !== "object" && typeof object !== "function") throw new TypeError("impossível manipular fora de objeto");
+
+        Property.set(object, property, ...manipulators);
+
+        this.object = object;
+        this.property = property;
+
+        const properties = Object.getOwnPropertyDescriptor(object, property);
+        this.get = properties.get;
+        this.set = properties.set;
+        this.value = properties.value;
+        this.writable = properties.writable;
+        this.enumerable = properties.enumerable;
+        this.configurable = properties.configurable;
+    }
+
+    static #validateObjProperty(object, property) {
+        if (typeof property !== "string" && typeof property !== "symbol") throw new TypeError("nome de propriedade inválida");
+        if (typeof object !== "object" && typeof object !== "function") throw new TypeError("impossível manipular fora de objeto");
+    }
+
+    static freeze(object, property) {
+        this.#validateObjProperty(object, property);
+
+        let prop = Object.getOwnPropertyDescriptor(object, property);
+        if (prop === undefined) throw new TypeError("propriedade inexistente");
+
+        prop.writable = false;
+        Object.defineProperty(object, property, prop);
+    }
+
+    static unfreeze(object, property) {
+        this.#validateObjProperty(object, property);
+
+        let prop = Object.getOwnPropertyDescriptor(object, property);
+        if (prop === undefined) throw new TypeError("propriedade inexistente");
+
+        prop.writable = true;
+        Object.defineProperty(object, property, prop);
+    }
+
+    static hide(object, property) {
+        this.#validateObjProperty(object, property);
+
+        let prop = Object.getOwnPropertyDescriptor(object, property);
+        if (prop === undefined) throw new TypeError("propriedade inexistente");
+
+        prop.enumerable = false;
+        Object.defineProperty(object, property, prop);
+    }
+
+    static show(object, property) {
+        this.#validateObjProperty(object, property);
+
+        let prop = Object.getOwnPropertyDescriptor(object, property);
+        if (prop === undefined) throw new TypeError("propriedade inexistente");
+
+        prop.enumerable = true;
+        Object.defineProperty(object, property, prop);
+    }
+
+    static lock(object, property) {
+        this.#validateObjProperty(object, property);
+
+        let prop = Object.getOwnPropertyDescriptor(object, property);
+        if (prop === undefined) throw new TypeError("propriedade inexistente");
+
+        prop.configurable = false;
+        Object.defineProperty(object, property, prop);
+    }
+
+    static set(object, property, ...manipulators) {
+        this.#validateObjProperty(object, property);
+
+        if (manipulators.includes('lock')) {
+            let newmanipulators = [];
+            manipulators.forEach(manipulator => {
+                if (manipulator === "lock") return;
+                newmanipulators.push(manipulator);
+            });
+            newmanipulators.push('lock');
+            manipulators = newmanipulators;
+        }
+
+        manipulators.forEach(manipulator => {
+            if (!Property.#methods.includes(manipulator)) throw new OptionError("método de manipulação inválido");
+
+            this[manipulator](object, property);
+        });
+    }
+
+    static catch(object, property, search = "value") {
+        if (typeof property !== "string" && typeof property !== "symbol") throw new TypeError("nome de propriedade inválida");
+        if (object === null || object === undefined) throw new TypeError("objeto de busca inválido");
+        if (!this.#attributes.includes(search)) throw new OptionError("atributo de busca inválido");
+
+        let properties = Object.getOwnPropertyDescriptor(object, property);
+        if (!properties) properties = {};
+
+        return properties[search];
+    }
+
+    static #methods = [ "freeze", "unfreeze", "hide", "show", "lock" ];
+    static #attributes = [ "get", "set", "value", "writable", "enumerable", "configurable" ];
+}
+
 // Errors
 
 class OptionError extends Error {
-    /**
-     * Erro de opções.
-     * @param {*} message 
-     * @param {*} options 
-     */
     constructor(message, options = undefined) {
         typeof options == "object" ? super(message, options) : super(message);
     }
 
-    name = "OptionError";
+    static {
+        const prototype = this.prototype
+        prototype.name = "OptionError";
+        Property.set(prototype, 'name', "hide", "freeze", "lock");
+    }
 }
 
 class ContextError extends Error {
@@ -18,7 +128,9 @@ class ContextError extends Error {
         typeof options == "object" ? super(message, options) : super(message);
     }
 
-    name = "ContextError";
+    static {
+        this.prototype.name = "ContextError";
+    }
 }
 
 class LogicalError extends Error {
@@ -26,7 +138,9 @@ class LogicalError extends Error {
         typeof options == "object" ? super(message, options) : super(message);
     }
 
-    name = "LogicalError";
+    static {
+        this.prototype.name = "LogicalError";
+    }
 }
 
 // Value Types
@@ -226,18 +340,6 @@ function searchElement(target, method = 'id') {
     }
 }
 
-class CatchProperty {
-    static search(type, obj, property) {
-        if (!this.#searchTypes.includes(type)) throw new OptionError("tipo de pesquisa inválida");
-        if (typeof obj !== "object") throw new TypeError("impossível pesquisar fora de objeto");
-        if (typeof property !== "string" && typeof property !== "symbol") throw new TypeError("nome de propriedade inválida");
-
-        return Object.getOwnPropertyDescriptor(obj, property)[type];
-    }
-
-    static #searchTypes = [ "get", "set", "value", "writable", "enumerable", "configurable" ]
-}
-
 // Checks
 
 function isValidHexColor(colorStr = "") {
@@ -252,6 +354,7 @@ function isValidHexColor(colorStr = "") {
 
 if (typeof module !== "undefined") {
     module.exports = {
+        Property,
         OptionError,
         ContextError,
         LogicalError,
@@ -259,7 +362,6 @@ if (typeof module !== "undefined") {
         TypedMap,
         TypedSet,
         searchElement,
-        CatchProperty,
         isValidHexColor
     }
 }

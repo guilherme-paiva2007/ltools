@@ -95,6 +95,12 @@ function setPrototypes() {
         }
     }, true);
 
+    StringManipulator.setGetterSetter('empty', {
+        get: function empty() {
+            return this.trim() === "";
+        }
+    });
+
     NumberManipulator.setGetterSetter('hex', {
         /**
          * Retorna o valor hexadecimal do número.

@@ -6,6 +6,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Document</title>
         <?php include './html/head.php' ?>
+        <script>
+            if (window.opener === null) {
+                window.history.back()
+                window.location.href = project_dir;
+            }
+        </script>
     </head>
     <body>
         <label for="">Set Test:</label><br>
@@ -21,11 +27,20 @@
         <input type="text" id="opener-console-input"><br>
         <button id="opener-console">Print</button><br><hr><br>
         <script>
-            searchElement('opener-console').addEventListener('click', () => {
-                const input =searchElement('opener-console-input');
-
-                opener.console.log(input.value);
-            })
+            const openerConsole = searchElement('opener-console');
+            const openerConsoleInput =searchElement('opener-console-input');
+            openerConsole.addEventListener('click', () => {
+                const text = openerConsoleInput.value.trim();
+                if (text !== "") {
+                    opener.console.log(text);
+                }
+                openerConsoleInput.value = "";
+            });
+            searchElement('opener-console-input').addEventListener('keypress', event => {
+                if (event.key === "Enter") {
+                    openerConsole.click();
+                }
+            });
         </script>
     </body>
 </html>

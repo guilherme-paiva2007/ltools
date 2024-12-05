@@ -1,0 +1,16 @@
+* {
+    transition: 0.5s;
+}
+
+body {
+    background-color: var(--base);
+    color: var(--reverse);
+}
+
+a {
+    color: var(--blue_reverse);
+}
+
+a:visited {
+    color: var(--purple_reverse);
+}

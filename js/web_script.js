@@ -1,7 +1,7 @@
 // Storage Management
 
 if (typeof module !== "undefined") {
-    const { TypedMap, OptionError, searchElement } = require( "./script" );
+    const { TypedMap, OptionError, searchElement, Property } = require( "./script" );
 }
 
 class WebStorageManager {
@@ -457,114 +457,109 @@ class ChromaticManager {
 
 // Interactive Elements
 
-class DynamicInput {
-    constructor(input, events = {}) {
-        if (!(input instanceof HTMLElement)) throw new TypeError("é necessário utilizar um elemento HTML");
-        if (typeof events !== "object" || events === null) throw new TypeError("eventos precisam estar armazenados num objeto <event, callback>");
-        this.#input = input;
+class InvisibleForm {
+    constructor(destination = '', method = 'GET', target = '_self') {
+        this.destination = destination;
+        this.method = method;
+        this.target = target;
 
-        DynamicInput.#validEvents.forEach(event => {
-            if (events[event] == undefined) return;
-            const eventCallback = events[event];
-            if (typeof eventCallback !== "function") throw new TypeError("um evento precisa ser uma função");
-            this.#events.set(event, eventCallback);
-            this.#input.addEventListener(event, eventCallback);
-        });
+        Property.set(this, 'form', "freeze", "lock");
+        Object.preventExtensions(this);
+
+        const form = this.#form;
+        Property.set(form, 'submit', "hide", "freeze", "lock");
     }
 
-    #input;
-    #events = new TypedMap(Function, String);
-    
-    static #validEvents = [ "input", "change", "focus", "blur" ];
-}
+    #form = document.createElement('form');
+    #destination = '';
+    #method = 'GET';
+    #target = '_self';
 
-class DynamicSearch {
-    constructor(searchLink, join = "?") {
-        if (!String.testValidConversion(searchLink)) throw new TypeError("URL de pesquisa inválido para conversão em string");
-        searchLink = String(searchLink);
+    get destination() { return this.#destination; }
+    get method() { return this.#method; }
+    get target() { return this.#target; }
 
-        if (join !== "?" || join !== "&") throw new TypeError("junção pode ser apenas ? e &");
-
-        this.#join = join;
-        this.#link = searchLink;
+    set destination(value) {
+        if (!String.testValidConversion(value)) throw new TypeError("destino inválido para conversão em string");
+        this.#destination = String(value);
+    }
+    set method(value) {
+        if (!String.testValidConversion(value)) throw new TypeError("método inválido para conversão em string");
+        this.#method = String(value);
+    }
+    set target(value) {
+        if (!String.testValidConversion(value)) throw new TypeError("alvo inválido para conversão em string");
+        this.#target = String(value);
     }
 
-    #link;
-    #join = "?";
+    #values = new TypedMap(String, String);
 
-    link(search = "") {
-        if (!String.testValidConversion(search)) throw new TypeError("pesquisa inválida para conversão em string");
-        search = encodeURI(String(search));
-
-        return `${this.#link}${this.#join}search=${search}`;
-    }
-
-    async search(search, callback = (search) => {}) { {}
-        const link = this.link(search);
-        if (typeof callback !== "function") throw new TypeError("callback precisa ser uma função");
+    set(name, value) {
         
-        search = await fetch(link).then(resp => resp.json());
-
-        callback(search);
-        return search;
     }
+
+    remove(name) {}
+
+    get(name) {}
+
+    has(name) {}
+
+    submit() {}
 }
 
 class Popup {
-    constructor(link, { name, popupconfg }) {
+    constructor(link, popupconfig) {
         if (!String.testValidConversion(link)) throw new TypeError("link inválido para conversão em string");
         link = String(link);
         this.#link = link;
 
-        String.testValidConversion(name) ? name = String(name) : name = ID.date();
-        String.testValidConversion(popupconfg) ? popupconfg = String(popupconfg) : popupconfg = popupConfig(800, 500);
-
-        this.#config = {
-            name,
-            popupconfg
-        };
+        String.testValidConversion(popupconfig) ? popupconfig = String(popupconfig) : popupconfig = popupConfig();
+        this.#config = popupconfig;
 
         Object.defineProperty(this, 'storage', { writable: false, configurable: false });
         Object.preventExtensions(this);
     }
 
     #link;
-    #config = {
-        name: '',
-        popupconfg: ''
-    };
+    #config;
 
     storage = {};
-    #window = null;
+    /** @type {null|Window} */
+    window = null;
 
     open() {
-        if (this.#window !== null) return;
-        this.#window = window.open(this.#link, "_blank", this.#config.popupconfg);
-        if (this.#window === null) return null;
-        this.#window.addEventListener('load', () => {
-            this.#window[Popup.IncomingStorageSymbol] = this.storage;
+        if (this.window !== null && !this.window.closed) return null;
+        this.window = window.open(this.#link, "_blank", this.#config);
+        if (this.window === null) return null;
+        this.window.addEventListener('load', () => {
+            this.window[Popup.IncomingStorageSymbol] = this.storage;
         });
-        return this.#window;
+        this.window.addEventListener('beforeunload', () => {
+            this.window = null;
+        });
+        
+        return this.window;
     }
 
     close() {
-        if (this.#window === null) return;
-        this.#window.close();
+        if (this.window === null) return;
+        this.window.close();
     }
 
     static #IncomingStorage = Symbol('IncomingPopupStorage');
 
-    static {
-        Symbol.IncomingStorage = this.#IncomingStorage;
-    }
-
     static get IncomingStorageSymbol() {
         if (window.opener === null) return this.#IncomingStorage;
-        return window.opener.Symbol.IncomingStorage;
+        return window.opener.Symbol.incomingPopupStorage;
     }
 
     static get IncomingStorage() {
         if (window.opener === null) return null;
         return window[this.IncomingStorageSymbol];
+    }
+
+    static {
+        Symbol.incomingPopupStorage = this.IncomingStorageSymbol;
+        Property.set(Symbol, 'incomingPopupStorage', 'hide', 'lock', 'freeze');
     }
 }

@@ -2,4 +2,3 @@
 <link rel="stylesheet" href="<?php generateLink("/cssimport")?>">
 <script src="<?php generateLink("/jsimport/auto") ?>"></script>
 <script src="<?php generateLink("/jsimport/load") ?>"></script>
-<link rel="stylesheet" href="./css/outputtest.css">
